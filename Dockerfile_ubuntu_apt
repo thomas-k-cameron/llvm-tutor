@@ -23,16 +23,19 @@ ENV TUTOR_DIR /llvm-tutor
 # setting the time-zone here.
 ENV TZ=Europe/London
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade && apt-get install -y \
     git \
     cmake \
     ninja-build \
     build-essential \
     python3-minimal python3-pip\
     wget \
+    zstd \
+    curl \
+    libcurl4-openssl-dev \
     software-properties-common \
+    libzstd-dev \
     && rm -rf /var/lib/apt/lists/*
-
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main"
 RUN apt-get update
