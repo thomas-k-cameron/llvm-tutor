@@ -43,7 +43,7 @@
 //
 // License: MIT
 //========================================================================
-#include "DynamicCallCounter.h"
+#include "../include/DynamicCallCounter.h"
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Passes/PassBuilder.h"

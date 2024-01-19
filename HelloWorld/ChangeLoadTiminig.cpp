@@ -20,6 +20,9 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/raw_ostream.h"
+#include <llvm-17/llvm/IR/Function.h>
+#include <llvm-17/llvm/IR/Instruction.h>
+#include <llvm-17/llvm/IR/Module.h>
 
 using namespace llvm;
 
@@ -30,18 +33,28 @@ using namespace llvm;
 // everything in an anonymous namespace.
 namespace {
 
-// This method implements what the pass does
-void visitor(Function &F) {
-  errs() << "(llvm-tutor) Hello from: " << F.getName() << "\n";
-  errs() << "(llvm-tutor)   number of arguments: " << F.arg_size() << "\n";
+void runOnModule(llvm::Module &M) {
+  for (llvm::Function &func : M) {
+    for (auto &B : func) {
+      for (auto &I : B) {
+        for (auto op = I.op_begin(); op != I.op_end(); op++) {
+          errs() << I.getName();
+          errs() << "\n";
+        }
+      }
+    }
+  }
 }
 
+static bool isRequired() { return true; }
+
 // New PM implementation
-struct HelloWorld : PassInfoMixin<HelloWorld> {
+struct ChangeLoadTiminig : PassInfoMixin<ChangeLoadTiminig> {
+
   // Main entry point, takes IR unit to run the pass on (&F) and the
   // corresponding pass manager (to be queried if need be)
-  PreservedAnalyses run(Function &F, FunctionAnalysisManager &) {
-    visitor(F);
+  PreservedAnalyses run(Module &M, llvm::AnalysisManager<llvm::Module> &) {
+    runOnModule(M);
     return PreservedAnalyses::all();
   }
 
@@ -55,14 +68,14 @@ struct HelloWorld : PassInfoMixin<HelloWorld> {
 //-----------------------------------------------------------------------------
 // New PM Registration
 //-----------------------------------------------------------------------------
-llvm::PassPluginLibraryInfo getHelloWorldPluginInfo() {
-  return {LLVM_PLUGIN_API_VERSION, "HelloWorld", LLVM_VERSION_STRING,
+llvm::PassPluginLibraryInfo getChangeLoadTiminigInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "ChangeLoadTiminig", LLVM_VERSION_STRING,
           [](PassBuilder &PB) {
             PB.registerPipelineParsingCallback(
-                [](StringRef Name, FunctionPassManager &FPM,
+                [](StringRef Name, ModulePassManager &MPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
-                  if (Name == "hello-world") {
-                    FPM.addPass(HelloWorld());
+                  if (Name == "ChangeLoadTiminig") {
+                    MPM.addPass(ChangeLoadTiminig());
                     return true;
                   }
                   return false;
@@ -75,5 +88,5 @@ llvm::PassPluginLibraryInfo getHelloWorldPluginInfo() {
 // command line, i.e. via '-passes=hello-world'
 extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
 llvmGetPassPluginInfo() {
-  return getHelloWorldPluginInfo();
+  return getChangeLoadTiminigInfo();
 }
